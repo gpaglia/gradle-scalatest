@@ -1,49 +1,63 @@
-buildscript {
-    repositories {
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-    }
-    dependencies {
-        classpath "com.gradle.publish:plugin-publish-plugin:0.10.1"
-    }
-}
 plugins {
-    id "com.jfrog.bintray" version "1.0"
+    id 'java-gradle-plugin'
+    id 'maven-publish'
+    // id 'signing'
+    id 'groovy'
+    id 'org.unbroken-dome.test-sets' version '2.2.1'
 }
 
-apply plugin: 'com.gradle.plugin-publish'
-apply plugin: 'maven'
-apply plugin: 'signing'
-apply plugin: 'groovy'
 
-group = 'com.github.maiflai'
+group = 'com.gpaglia.scalatest'
 description = 'gradle-scalatest is a Gradle plugin for executing scalatest tests'
+version = '0.1.1'
 ext {
-    websiteUrl = 'https://github.com/maiflai/gradle-scalatest'
-    sourceUrl = 'https://github.com/maiflai/gradle-scalatest.git'
+    websiteUrl = 'https://github.com/gpaglia/gradle-scalatest'
+    sourceUrl = 'https://github.com/gpaglia/gradle-scalatest.git'
 }
 
-targetCompatibility = '1.6'
+targetCompatibility = '11'
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
+testSets {
+    libraries { testCommon }
+    unitTest { imports libraries.testCommon }
+    integrationTest { imports libraries.testCommon }
+    functionalTest {
+        imports libraries.testCommon
+        extendsFrom integrationTest
+    }
+}
+
+// Make all tests use JUnit 5
+tasks.withType(Test) {
+    useJUnitPlatform()
+}
+
 dependencies {
-    compile gradleApi()
-    compile localGroovy()
-    testCompile 'junit:junit:4.12'
+    implementation localGroovy()
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+    testRuntimeOnly files('src/test/lib/testutils.jar')
+    testImplementation 'org.hamcrest:hamcrest:2.2'
+    testImplementation 'org.mockito:mockito-core:3.2.4'
+    testImplementation 'org.mockito:mockito-junit-jupiter:3.2.4'
+
+    testCommonImplementation localGroovy()
 }
 
 task groovydocJar(type: Jar, dependsOn: groovydoc) {
     from "$buildDir/docs/groovydoc"
-    archiveClassifier = 'groovydoc'
+    archiveClassifier.set('groovydoc')
 }
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
-    archiveClassifier = 'sources'
+    archiveClassifier.set('sources')
 }
 
 test.dependsOn(jar)
@@ -53,96 +67,34 @@ artifacts {
     archives sourcesJar
 }
 
+/*
 signing {
     sign configurations.archives
 }
+*/
 
 if (project.version == 'unspecified') {
     version = '0.1-SNAPSHOT'
-    project.signArchives.enabled = false
+    // project.signArchives.enabled = false
 }
 
 task showVersion() { doLast { println(project.version) } }
 
-
-
-def propOrDefault(String property) {
-    if (project.hasProperty(property)) {
-        return project.getProperty(property)
-    } else {
-        return ''
-    }
-}
-
-pluginBundle {
-    website = project.websiteUrl
-    vcsUrl = project.sourceUrl
-    description = project.description
-    tags = ['testing', 'scala', 'scalatest']
-
+gradlePlugin {
+    testSourceSets sourceSets.functionalTest
     plugins {
-        scalatestPlugin {
-            id = 'com.github.maiflai.scalatest'
-            displayName = 'Gradle ScalaTest plugin'
+        scalaTest {
+            id = 'com.gpaglia.scalatest.gradle-scalatest'
+            implementationClass = 'com.gpaglia.scalatest.ScalaTestPlugin'
+            description = project.description
         }
     }
 }
 
-bintray {
-    user = propOrDefault('bintrayUsername')
-    key = propOrDefault('bintrayApiKey')
-    configurations = ['archives']
-    dryRun = false
-    publish = false
-    pkg {
-        repo = 'maven'
-        name = project.name
-        desc = project.description
-        websiteUrl = project.websiteUrl
-        issueTrackerUrl = 'https://github.com/maiflai/gradle-scalatest/issues'
-        vcsUrl = project.sourceUrl
-        licenses = ['unlicense']
-        labels = ['gradle', 'testing', 'scala']
-        publicDownloadNumbers = true
-        version {
-            attributes = ['gradle-plugin': 'com.github.maiflai.scalatest:com.github.maiflai:gradle-scalatest']
-        }
+publishing {
 
-    }
-}
-
-uploadArchives {
     repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: propOrDefault('sonatypeUsername'), password: propOrDefault('sonatypePassword'))
-            }
-
-            pom.project {
-                name project.name
-                description project.description
-                url project.websiteUrl
-
-                scm {
-                    url "scm:git:${project.sourceUrl}"
-                }
-
-                licenses {
-                    license {
-                        name 'unlicense'
-                        url 'http://unlicense.org'
-                        distribution 'repo'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id 'maiflai'
-                    }
-                }
-            }
-        }
+        mavenLocal()
     }
 }
+
