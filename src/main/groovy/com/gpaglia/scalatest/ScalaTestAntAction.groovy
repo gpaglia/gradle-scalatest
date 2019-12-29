@@ -116,7 +116,6 @@ class ScalaTestAntAction implements Action<Test> {
 
         t.logger.debug("params: ${params.toString()}")
         t.logger.debug("helper: ${helper.toString()}")
-        t.logger.lifecycle('jvmargs: ' + t.getAllJvmArgs().toString())
 
         if (helper.suffixes.size() > 0) {
             params << [ suffixes: helper.suffixes.join('|') ]
