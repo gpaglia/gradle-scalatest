@@ -9,7 +9,7 @@ plugins {
 
 group = 'com.gpaglia.scalatest'
 description = 'gradle-scalatest is a Gradle plugin for executing scalatest tests'
-version = '0.1.1'
+version = '0.1.2'
 ext {
     websiteUrl = 'https://github.com/gpaglia/gradle-scalatest'
     sourceUrl = 'https://github.com/gpaglia/gradle-scalatest.git'

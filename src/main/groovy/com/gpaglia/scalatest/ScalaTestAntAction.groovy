@@ -34,7 +34,7 @@ class ScalaTestAntAction implements Action<Test> {
     @Override
     void execute(Test t) {
         try {
-            executeAntActionLoggingOutput(t)
+            executeAntActionLoggingOutput(t, false)
         } catch (BuildException ex) {
             handleTestFailures(t, ex)
         }
@@ -69,7 +69,7 @@ class ScalaTestAntAction implements Action<Test> {
     }
 
     @PackageScope
-    static void executeAntActionLoggingOutput(Test t, String antTaskClassName = ANT_TASK_CLASSNAME) {
+    static void executeAntActionLoggingOutput(Test t, boolean doLog, String antTaskClassName = ANT_TASK_CLASSNAME) {
         final ant = t.getAnt()
         final buffer = new ByteArrayOutputStream()
         new PrintStream(buffer, true, "UTF-8").withCloseable { captureStream ->
@@ -80,7 +80,9 @@ class ScalaTestAntAction implements Action<Test> {
             )
             ant.project.addBuildListener(listener)
             executeAntAction(ant, t, antTaskClassName)
-            buffer.toString().eachLine { line -> t.logger.lifecycle('[GP] ' + line) }
+            if (doLog) {
+                buffer.toString().eachLine { line -> t.logger.lifecycle('[GP] ' + line) }
+            }
         }
     }
 
