@@ -3,6 +3,8 @@ package com.gpaglia.scalatest
 import groovy.transform.PackageScope
 import groovy.transform.ToString
 import org.apache.tools.ant.BuildException
+import org.apache.tools.ant.DefaultLogger
+import org.apache.tools.ant.Project
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.logging.configuration.ConsoleOutput
@@ -29,6 +31,18 @@ class ScalaTestAntAction implements Action<Test> {
         List<String> tests = new ArrayList<>()
         List<String> includeTags = new ArrayList<>()
         List<String> excludeTags = new ArrayList<>()
+
+
+        @Override
+        String toString() {
+            return "Helper{" +
+                    "suffixes=" + suffixes +
+                    ", suites=" + suites +
+                    ", tests=" + tests +
+                    ", includeTags=" + includeTags +
+                    ", excludeTags=" + excludeTags +
+                    '}'
+        }
     }
 
     @Override
@@ -73,16 +87,22 @@ class ScalaTestAntAction implements Action<Test> {
         final ant = t.getAnt()
         final buffer = new ByteArrayOutputStream()
         new PrintStream(buffer, true, "UTF-8").withCloseable { captureStream ->
-            def listener = new org.apache.tools.ant.DefaultLogger(
+            def listener = new DefaultLogger(
                     errorPrintStream: captureStream,
                     outputPrintStream: captureStream,
-                    messageOutputLevel: org.apache.tools.ant.Project.MSG_INFO
+                    messageOutputLevel: Project.MSG_INFO
             )
             ant.project.addBuildListener(listener)
-            executeAntAction(ant, t, antTaskClassName)
+            try {
+                executeAntAction(ant, t, antTaskClassName)
+            } finally {
+                ant.project.removeBuildListener(listener)
+            }
             if (doLog) {
                 buffer.toString().eachLine { line -> t.logger.lifecycle('[GP] ' + line) }
             }
+
+            void
         }
     }
 
@@ -103,7 +123,7 @@ class ScalaTestAntAction implements Action<Test> {
         )
 
         def params = [
-                runpath: t.getProject().getTasks().getByName('compileTestScala').getOutputs().files.asPath,
+                // runpath: t.getProject().getTasks().getByName('compileTestScala').getOutputs().files.asPath,
                 fork: true,
                 haltonfailure: true,
                 parallel: true,
@@ -116,12 +136,12 @@ class ScalaTestAntAction implements Action<Test> {
 
         Helper helper = getHelper(t)
 
-        t.logger.debug("params: ${params.toString()}")
-        t.logger.debug("helper: ${helper.toString()}")
-
         if (helper.suffixes.size() > 0) {
             params << [ suffixes: helper.suffixes.join('|') ]
         }
+
+        t.logger.debug("params: ${params.toString()}")
+        t.logger.debug("helper: ${helper.toString()}")
 
         ant.scalatest(params) {
             for(String arg: t.getAllJvmArgs()) {
@@ -183,7 +203,7 @@ class ScalaTestAntAction implements Action<Test> {
             case TestLogEvent.SKIPPED: return 'XER' // ignored and pending and scope
             case TestLogEvent.FAILED: return ''
             case TestLogEvent.STANDARD_OUT:
-            case TestLogEvent.STANDARD_ERROR: return 'OM' // infoprovided, markupprovided
+            case TestLogEvent.STANDARD_ERROR: return 'OM' // info provided, markup provided
             default: return ''
         }
     }
@@ -284,8 +304,8 @@ class ScalaTestAntAction implements Action<Test> {
     static Map<String, ?> getConfigs(Test t) {
         Map<String, ?> configs = new HashMap<String, ?>()
 
-        def cmap = t.extensions.findByName(CONFIG) as Map<String, ?>
-        cmap?.entrySet()?.each { entry ->
+        def configMap = t.extensions.findByName(CONFIG) as Map<String, ?>
+        configMap?.entrySet()?.each { entry ->
             configs.put(entry.key, entry.value)
         }
 
