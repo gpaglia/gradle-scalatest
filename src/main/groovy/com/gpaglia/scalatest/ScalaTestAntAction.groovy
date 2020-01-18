@@ -1,7 +1,6 @@
 package com.gpaglia.scalatest
 
 import groovy.transform.PackageScope
-import groovy.transform.ToString
 import org.apache.tools.ant.BuildException
 import org.apache.tools.ant.DefaultLogger
 import org.apache.tools.ant.Project
@@ -12,17 +11,13 @@ import org.gradle.api.reporting.DirectoryReport
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.gradle.api.tasks.util.PatternSet
 import org.gradle.internal.UncheckedException
 
 class ScalaTestAntAction implements Action<Test> {
 
-    static String TAGS = 'tags'
-    static String SUITES = '_suites'
-    static String CONFIG = '_config'
-
     private static final ANT_TASK_CLASSNAME = 'org.scalatest.tools.ScalaTestAntTask'
 
+    /*
     @ToString
     @PackageScope
     static class Helper {
@@ -44,6 +39,7 @@ class ScalaTestAntAction implements Action<Test> {
                     '}'
         }
     }
+    */
 
     @Override
     void execute(Test t) {
@@ -134,7 +130,7 @@ class ScalaTestAntAction implements Action<Test> {
             [ numthreads: nt ]
         }
 
-        Helper helper = getHelper(t)
+        ScalaTestHelper helper = ScalaTestHelper.getHelper(t)
 
         if (helper.suffixes.size() > 0) {
             params << [ suffixes: helper.suffixes.join('|') ]
@@ -182,10 +178,19 @@ class ScalaTestAntAction implements Action<Test> {
             for (String sut in helper.suites) {
                 suite(classname: sut)
             }
-            for (String tst in helper.tests) {
+            for (String tst in helper.testsFull) {
+                test(name: tst)
+            }
+            for (String tst in helper.testSubstrings) {
                 test(substring: tst)
             }
-            for (Map.Entry<String, ?> entry in getConfigs(t).entrySet()) {
+            for (String pkg in helper.packagesMember) {
+                membersonly(package: pkg)
+            }
+            for (String pkg in helper.packagesWildcard) {
+                wildcard(package: pkg)
+            }
+            for (Map.Entry<String, ?> entry in helper.configs.entrySet()) {
                 config(name: entry.key, value: entry.value)
             }
         }
@@ -256,6 +261,7 @@ class ScalaTestAntAction implements Action<Test> {
         return t.maxParallelForks
     }
 
+    /*
     @PackageScope
     static Helper getHelper(Test t) {
         Helper helper = new Helper()
@@ -298,8 +304,9 @@ class ScalaTestAntAction implements Action<Test> {
 
         return helper
     }
+    */
 
-
+    /*
     @PackageScope
     static Map<String, ?> getConfigs(Test t) {
         Map<String, ?> configs = new HashMap<String, ?>()
@@ -311,6 +318,7 @@ class ScalaTestAntAction implements Action<Test> {
 
         return configs
     }
+    */
 
     @PackageScope
     static String getJunitXmlPath(Test t) {
