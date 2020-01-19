@@ -38,7 +38,7 @@ class ScalaTestHelper {
     Set<String> suffixes = new HashSet<>()
     Set<String> suites = new HashSet<>()
     Set<String> testsFull = new HashSet<>()
-    Set<String> testSubstrings = new HashSet<>()
+    Set<String> testsSubstring = new HashSet<>()
     Set<String> packagesMember = new HashSet<>()
     Set<String> packagesWildcard = new HashSet<>()
     Set<String> includeTags = new HashSet<>()
@@ -52,7 +52,7 @@ class ScalaTestHelper {
                 ", suffixes=" + suffixes +
                 ", suites=" + suites +
                 ", testsFull=" + testsFull +
-                ", testSubstrings=" + testSubstrings +
+                ", testSubstrings=" + testsSubstring +
                 ", packagesMember=" + packagesMember +
                 ", packagesWildcard=" + packagesWildcard +
                 ", includeTags=" + includeTags +
@@ -161,9 +161,15 @@ class ScalaTestHelper {
 
         if (! methods.empty && ! containWildcards(methods)) {
             testsFull.add(methods.join("."))
-        } else {
-            methods.each {
-                testSubstrings.add(it.replace(WILDCARD, ""))
+        } else if (! methods.empty) {
+            for (int i = 0; i < methods.size(); i++) {
+                final int idx = methods.get(i).indexOf(WILDCARD)
+                if (idx < 0) {
+                    testsFull.add(methods.get(i))
+                } else {
+                    testsSubstring.add(methods.get(i).substring(0, idx))
+                    break
+                }
             }
         }
     }

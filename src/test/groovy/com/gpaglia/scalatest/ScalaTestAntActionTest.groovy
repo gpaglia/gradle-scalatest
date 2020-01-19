@@ -226,9 +226,39 @@ JavaExecAction action = ScalaTestAction.makeAction(test)
     void filtersWithWildcardAreTranslatedToTestsSubstring() throws Exception {
         Task test = testTask()
         test.filter.setIncludePatterns('*popped', 'weasel*')
-        assertThat(getHelper(test).testSubstrings, containsInAnyOrder('popped', 'weasel'))
+        assertThat(getHelper(test).testsSubstring, containsInAnyOrder('popped', 'weasel'))
     }
 
+    @Test
+    void filtersWithDotsAreTranslatedToPackagesMember() throws Exception {
+        Task test = testTask()
+        test.filter.setIncludePatterns('alpha.beta.gamma', 'com.example.test')
+        assertThat(getHelper(test).packagesMember, containsInAnyOrder('alpha.beta.gamma', 'com.example.test'))
+    }
+
+    @Test
+    void filtersWithDotsAndWIldcardsAreTranslatedToPackageWildcard() throws Exception {
+        Task test = testTask()
+        test.filter.setIncludePatterns('alpha.beta.gamma*', 'com.example.test*')
+        assertThat(getHelper(test).packagesWildcard, containsInAnyOrder('alpha.beta.gamma', 'com.example.test'))
+    }
+
+    @Test
+    void filtersStartingUppercaseAreTranslatedToSuffixesAndTests() throws Exception {
+        Task test = testTask()
+        test.filter.setIncludePatterns('MySuite.method1.method2', 'AnotherSuite.method3')
+        assertThat(getHelper(test).suffixes, containsInAnyOrder('MySuite', 'AnotherSuite'))
+        assertThat(getHelper(test).testsFull, containsInAnyOrder("method1.method2", "method3"))
+    }
+
+    @Test
+    void filtersStartingUppercaseAreTranslatedToSuffixesAndTestsSubstring() throws Exception {
+        Task test = testTask()
+        test.filter.setIncludePatterns('MySuite.method1.method2*', 'AnotherSuite.method3*')
+        assertThat(getHelper(test).suffixes, containsInAnyOrder('MySuite', 'AnotherSuite'))
+        assertThat(getHelper(test).testsSubstring, containsInAnyOrder("method2", "method3"))
+        assertThat(getHelper(test).testsFull, containsInAnyOrder("method1"))
+    }
 
     private static void checkSuiteTranslation(String message, Closure<Task> task, List<String> suites) {
         Task test = testTask()

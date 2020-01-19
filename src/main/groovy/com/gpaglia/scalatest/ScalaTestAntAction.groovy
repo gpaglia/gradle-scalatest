@@ -181,7 +181,7 @@ class ScalaTestAntAction implements Action<Test> {
             for (String tst in helper.testsFull) {
                 test(name: tst)
             }
-            for (String tst in helper.testSubstrings) {
+            for (String tst in helper.testsSubstring) {
                 test(substring: tst)
             }
             for (String pkg in helper.packagesMember) {
