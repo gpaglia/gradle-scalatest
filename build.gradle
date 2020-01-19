@@ -4,6 +4,7 @@ plugins {
     // id 'signing'
     id 'groovy'
     id 'org.unbroken-dome.test-sets' version '2.2.1'
+    id 'io.wusa.semver-git-plugin' version '2.0.0-alpha.1'
 }
 
 
@@ -77,12 +78,16 @@ signing {
 }
 */
 
+/*
 if (project.version == 'unspecified') {
     version = '0.1.0-SNAPSHOT'
     // project.signArchives.enabled = false
 }
+*/
 
-task showVersion() { doLast { println(project.version) } }
+version = semver.info
+
+task showMyVersion() { doLast { println(project.version) } }
 
 gradlePlugin {
     testSourceSets sourceSets.functionalTest

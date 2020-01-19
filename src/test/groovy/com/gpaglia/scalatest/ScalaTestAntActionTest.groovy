@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 
 import static ScalaTestAntAction.color
 import static com.gpaglia.scalatest.ScalaTestAntAction.*
+import static com.gpaglia.scalatest.ScalaTestHelper.getHelper
 import static org.hamcrest.CoreMatchers.*
 import static org.hamcrest.MatcherAssert.assertThat
 import static org.hamcrest.Matchers.*
@@ -142,6 +143,7 @@ JavaExecAction action = ScalaTestAction.makeAction(test)
         Task test = testTask()
         test.systemProperties.put('bob', 'rita')
 //        assertThat(getConfigs(test), hasEntry(is('bob'), is('rita')))
+        //noinspection SpellCheckingInspection
         assertThat(test.getAllJvmArgs(), hasItem('-Dbob=rita'))
     }
 
@@ -206,20 +208,57 @@ JavaExecAction action = ScalaTestAction.makeAction(test)
     }
 
     @Test
-    void testsAreTranslatedToSuffixes() throws Exception {
+    void uppercaseClassesAreTranslatedToSuffixes() throws Exception {
         Task test = testTask()
-        String[] tests = ['MyTest', 'MySpec', 'MySuite']
+        String[] tests = ['MyTest', 'MySpec', 'MySuite', 'MySpecificObj']
         test.filter.setIncludePatterns(tests)
         assertThat(getHelper(test).suffixes, containsInAnyOrder(tests))
     }
 
     @Test
-    void filtersAreTranslatedToSubstrings() throws Exception {
+    void filtersAreTranslatedToTestsFull() throws Exception {
         Task test = testTask()
         test.filter.setIncludePatterns('popped', 'weasel')
-        assertThat(getHelper(test).tests, containsInAnyOrder('popped', 'weasel'))
+        assertThat(getHelper(test).testsFull, containsInAnyOrder('popped', 'weasel'))
     }
 
+    @Test
+    void filtersWithWildcardAreTranslatedToTestsSubstring() throws Exception {
+        Task test = testTask()
+        test.filter.setIncludePatterns('*popped', 'weasel*')
+        assertThat(getHelper(test).testsSubstring, containsInAnyOrder('popped', 'weasel'))
+    }
+
+    @Test
+    void filtersWithDotsAreTranslatedToPackagesMember() throws Exception {
+        Task test = testTask()
+        test.filter.setIncludePatterns('alpha.beta.gamma', 'com.example.test')
+        assertThat(getHelper(test).packagesMember, containsInAnyOrder('alpha.beta.gamma', 'com.example.test'))
+    }
+
+    @Test
+    void filtersWithDotsAndWIldcardsAreTranslatedToPackageWildcard() throws Exception {
+        Task test = testTask()
+        test.filter.setIncludePatterns('alpha.beta.gamma*', 'com.example.test*')
+        assertThat(getHelper(test).packagesWildcard, containsInAnyOrder('alpha.beta.gamma', 'com.example.test'))
+    }
+
+    @Test
+    void filtersStartingUppercaseAreTranslatedToSuffixesAndTests() throws Exception {
+        Task test = testTask()
+        test.filter.setIncludePatterns('MySuite.method1.method2', 'AnotherSuite.method3')
+        assertThat(getHelper(test).suffixes, containsInAnyOrder('MySuite', 'AnotherSuite'))
+        assertThat(getHelper(test).testsFull, containsInAnyOrder("method1.method2", "method3"))
+    }
+
+    @Test
+    void filtersStartingUppercaseAreTranslatedToSuffixesAndTestsSubstring() throws Exception {
+        Task test = testTask()
+        test.filter.setIncludePatterns('MySuite.method1.method2*', 'AnotherSuite.method3*')
+        assertThat(getHelper(test).suffixes, containsInAnyOrder('MySuite', 'AnotherSuite'))
+        assertThat(getHelper(test).testsSubstring, containsInAnyOrder("method2", "method3"))
+        assertThat(getHelper(test).testsFull, containsInAnyOrder("method1"))
+    }
 
     private static void checkSuiteTranslation(String message, Closure<Task> task, List<String> suites) {
         Task test = testTask()
@@ -252,7 +291,7 @@ JavaExecAction action = ScalaTestAction.makeAction(test)
                 not(hasItem(TestLogEvent.FAILED)))
 
         assertThat(other([TestLogEvent.PASSED, TestLogEvent.FAILED] as Set),
-                both(not(hasItem(TestLogEvent.PASSED))).and(not(hasItem(TestLogEvent.PASSED))))
+                both(not(hasItem(TestLogEvent.PASSED))) & not(hasItem(TestLogEvent.PASSED)))
     }
 
     /*
@@ -270,6 +309,7 @@ JavaExecAction action = ScalaTestAction.makeAction(test)
     void failedOnlyReporting() throws Exception {
         Task test = testTask()
         test.testLogging.events = [TestLogEvent.FAILED]
+        //noinspection SpellCheckingInspection
         assertThat(reportingConfig(test), hasOutput('CDEHLMNOPQRSX'))
 
     }
@@ -278,27 +318,27 @@ JavaExecAction action = ScalaTestAction.makeAction(test)
     void configString() throws Exception {
         Task test = testTask()
         test.config 'a', 'b'
-        assertThat(getConfigs(test), hasEntry(is('a'), is('b')))
+        assertThat(getHelper(test).configs, hasEntry(is('a'), is('b')))
     }
 
     @Test
     void configNumber() throws Exception {
         Task test = testTask()
         test.config 'a', 1
-        assertThat(getConfigs(test), hasEntry(is('a'), is(1)))
+        assertThat(getHelper(test).configs, hasEntry(is('a'), is(1)))
     }
 
     @Test
-    void configMap() throws Exception {
+    void testConfigMap() throws Exception {
         Task test = testTask()
         test.configMap([a: 'b', c: 1])
+
+        final matcher = both(
+                hasEntry(equalTo('a'), equalTo((Object) 'b'))) & hasEntry(equalTo('c'), equalTo((Object) 1))
+
         assertThat(
-            getConfigs(test),
-            both(
-                hasEntry(is('a'), is('b')))
-                .and(
-                    hasEntry(is('c'), is(1))
-                )
+            getHelper(test).configs,
+            matcher
         )
     }
 
