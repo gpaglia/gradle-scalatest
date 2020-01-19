@@ -17,7 +17,6 @@ gradle-app.setting
 /gradlew
 /gradlew.bat
 
-#idea
+#idea stuff
+
 .idea/
-
-
