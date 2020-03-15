@@ -18,7 +18,7 @@ class ScalaTestPlugin implements Plugin<Project> {
 
     public static String MODE = 'com.gpaglia.scalatest.mode'
     static enum Mode {
-        replaceAll, replaceOne, append
+        prototype, replaceAll, replaceOne, append
     }
 
     @Override
@@ -44,6 +44,15 @@ class ScalaTestPlugin implements Plugin<Project> {
                             description: 'Run scalatest unit tests',
                             dependsOn: t.tasks.testClasses
                         ) as Test)
+                    break
+                case Mode.prototype:
+                    configure(
+                        t.tasks.create(
+                            name: 'scalatestproto', type: ScalatestTask, group: 'verification',
+                                description: 'Run scalatest unit tests [new]',
+                                dependsOn: t.tasks.testClasses
+                        )
+                    )
                     break
             }
         }

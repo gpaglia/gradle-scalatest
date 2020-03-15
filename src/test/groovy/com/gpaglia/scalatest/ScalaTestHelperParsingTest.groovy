@@ -219,8 +219,7 @@ class ScalaTestHelperParsingTest {
         helper.decodeTuple(tuple)
 
         assertThat(helper.suffixes, containsInAnyOrder("MyClass"))
-        assertThat(helper.testsFull, containsInAnyOrder("method1"))
-        assertThat(helper.testsSubstring, containsInAnyOrder("method2"))
+        assertThat(helper.testsSubstring, containsInAnyOrder("method1.method2"))
         assertThat(helper.suites, empty())
         assertThat(helper.packagesMember, empty())
         assertThat(helper.packagesWildcard, empty())
@@ -351,7 +350,7 @@ class ScalaTestHelperParsingTest {
         assertThat(helper.suffixes, containsInAnyOrder("abc"))
         assertThat(helper.suites, empty())
         assertThat(helper.testsFull, empty())
-        assertThat(helper.testsSubstring, containsInAnyOrder("def", "ghi"))
+        assertThat(helper.testsSubstring, containsInAnyOrder("def.ghi"))
         assertThat(helper.packagesMember, empty())
         assertThat(helper.packagesWildcard, empty())
         assertThat(helper.includeTags, empty())

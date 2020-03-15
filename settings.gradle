@@ -1,0 +1,19 @@
+pluginManagement {
+    this.apply from: './platform.gradle'
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+        jcenter()
+    }
+
+    resolutionStrategy {
+    }
+
+    //noinspection GroovyAssignabilityCheck
+    plugins {
+        id 'io.wusa.semver-git-plugin' version "${plugin__wusaSemverPluginVersion}"
+        id 'io.freefair.lombok' version "${plugin__lombokPluginVersion}"
+        id 'org.unbroken-dome.test-sets' version "${plugin__testSetsPluginVersion}"
+    }
+
+}

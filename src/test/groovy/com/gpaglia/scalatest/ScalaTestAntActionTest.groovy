@@ -256,8 +256,7 @@ JavaExecAction action = ScalaTestAction.makeAction(test)
         Task test = testTask()
         test.filter.setIncludePatterns('MySuite.method1.method2*', 'AnotherSuite.method3*')
         assertThat(getHelper(test).suffixes, containsInAnyOrder('MySuite', 'AnotherSuite'))
-        assertThat(getHelper(test).testsSubstring, containsInAnyOrder("method2", "method3"))
-        assertThat(getHelper(test).testsFull, containsInAnyOrder("method1"))
+        assertThat(getHelper(test).testsSubstring, containsInAnyOrder("method1.method2", "method3"))
     }
 
     private static void checkSuiteTranslation(String message, Closure<Task> task, List<String> suites) {

@@ -27,7 +27,8 @@ class ScalaTestHelper {
 
     // patterns for inclusion
     // TODO: Check scala std for class and method names
-    private static final String WILDCARD = "*"
+    private static final char WILDCARD_CHAR = '*'
+    private static final String WILDCARD = Character.toString(WILDCARD_CHAR)
     private static final Pattern CLASS_NAME_PAT = Pattern.compile("[A-Z][^*]*")
     private static final Pattern CLASS_SUFFIX_PAT = Pattern.compile("[*][^*]*")
     private static final Pattern PKG_SEGMENT_PAT = Pattern.compile("[a-z][A-Za-z0-9_]*")
@@ -159,16 +160,17 @@ class ScalaTestHelper {
             }
         }
 
-        if (! methods.empty && ! containWildcards(methods)) {
-            testsFull.add(methods.join("."))
-        } else if (! methods.empty) {
-            for (int i = 0; i < methods.size(); i++) {
-                final int idx = methods.get(i).indexOf(WILDCARD)
-                if (idx < 0) {
-                    testsFull.add(methods.get(i))
-                } else {
-                    testsSubstring.add(methods.get(i).substring(0, idx))
-                    break
+        if (! methods.empty) {
+            final mthd = methods.join(".")
+            if (! mthd.contains(WILDCARD)) {
+                testsFull.add(mthd)
+            } else {
+                final String[] items = mthd.split(Pattern.quote(WILDCARD))
+                for (int i = 0; i < items.length; i++) {
+                    if (! items[i].isEmpty()) {
+                        testsSubstring.add(items[i])
+                        break
+                    }
                 }
             }
         }
@@ -197,7 +199,7 @@ class ScalaTestHelper {
             } else if (state == IN_PKG && it.matches(CLASS_SUFFIX_PAT)) {
                 state = IN_METHOD
                 classes.add(it)
-            } else if (state <= IN_CLASS && it.matches(CLASS_NAME_PAT)) {
+            } else if (state <= IN_CLASS && (WILDCARD.equals(it) || it.matches(CLASS_NAME_PAT))) {
                 state = IN_CLASS
                 classes.add(it)
             } else if (state == IN_PKG && it.matches(PKG_SEGMENT_PAT)) {
