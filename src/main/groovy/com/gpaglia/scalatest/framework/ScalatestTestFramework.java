@@ -55,12 +55,7 @@ public class ScalatestTestFramework implements TestFramework {
   @Override
   public WorkerTestClassProcessorFactory getProcessorFactory() {
     //TODO: tbc
-    final ScalatestSpec spec = new ScalatestSpec(
-        filter.getIncludePatterns(),
-        filter.getExcludePatterns(),
-        filter.getCommandLineIncludePatterns(),
-        options.getIncludeTags(),
-        options.getExcludeTags());
+    final ScalatestSpec spec = new ScalatestSpec(filter, options);
     return new TestClassProcessorFactoryImpl(options.getOutputDirectory(), spec);
   }
 
