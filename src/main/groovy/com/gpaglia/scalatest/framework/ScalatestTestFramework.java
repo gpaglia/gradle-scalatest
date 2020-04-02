@@ -10,13 +10,16 @@ import org.gradle.api.internal.tasks.testing.TestFramework;
 import org.gradle.api.internal.tasks.testing.WorkerTestClassProcessorFactory;
 import org.gradle.api.internal.tasks.testing.detection.TestFrameworkDetector;
 import org.gradle.api.internal.tasks.testing.filter.DefaultTestFilter;
+import org.gradle.api.tasks.testing.AbstractScalatest;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.api.tasks.testing.TestFrameworkOptions;
+import org.gradle.internal.UncheckedException;
+import org.gradle.internal.actor.ActorFactory;
+import org.gradle.internal.id.IdGenerator;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.service.ServiceRegistry;
+import org.gradle.internal.time.Clock;
 import org.gradle.process.internal.worker.WorkerProcessBuilder;
 
-import java.io.File;
 import java.io.Serializable;
 
 /**
@@ -26,21 +29,21 @@ import java.io.Serializable;
  * @see <a href="https://github.com/gradle/gradle/blob/master/subprojects/testing-jvm/src/main/java/org/gradle/api/internal/tasks/testing/testng/TestNGTestFramework.java">TtestNGTestFramework</a>
  */
 public class ScalatestTestFramework implements TestFramework {
-  private final Test testTask;
+  private final AbstractScalatest testTask;
   private final DefaultTestFilter filter;
   private final ScalatestOptions options;
   private final ScalatestDetector detector;
-  private final TestClassLoaderFactory classLoaderFactory;
+  private final ScalatestClassLoaderFactory classLoaderFactory;
   private final Framework framework;
 
 
-  public ScalatestTestFramework(final Test testTask, DefaultTestFilter filter, Instantiator instantiator, ClassLoaderCache classLoaderCache) {
+  public ScalatestTestFramework(final AbstractScalatest testTask, DefaultTestFilter filter, Instantiator instantiator, ClassLoaderCache classLoaderCache) {
     this.testTask = testTask;
     this.filter = filter;
     options = instantiator.newInstance(ScalatestOptions.class, testTask.getProject().getProjectDir());
-    classLoaderFactory = new TestClassLoaderFactory(classLoaderCache, testTask);
+    classLoaderFactory = new ScalatestClassLoaderFactory(classLoaderCache, testTask);
     framework = new FrameworkFactoryImpl().newFramework(classLoaderFactory.create());
-    detector = new ScalatestDetector(framework.newDetector());
+    detector = new ScalatestDetector(framework.newSelector());
   }
   @Override
   public TestFrameworkDetector getDetector() {
@@ -48,15 +51,15 @@ public class ScalatestTestFramework implements TestFramework {
   }
 
   @Override
-  public TestFrameworkOptions getOptions() {
+  public ScalatestOptions getOptions() {
     return options;
   }
 
   @Override
   public WorkerTestClassProcessorFactory getProcessorFactory() {
-    //TODO: tbc
+    //TODO: TBC
     final ScalatestSpec spec = new ScalatestSpec(filter, options);
-    return new TestClassProcessorFactoryImpl(options.getOutputDirectory(), spec);
+    return new TestClassProcessorFactoryImpl(spec);
   }
 
   @Override
@@ -65,17 +68,22 @@ public class ScalatestTestFramework implements TestFramework {
   }
 
   private static class TestClassProcessorFactoryImpl implements WorkerTestClassProcessorFactory, Serializable {
-    private final File testReportDir;
     private final ScalatestSpec spec;
 
-    public TestClassProcessorFactoryImpl(File testReportDir, ScalatestSpec spec) {
-      this.testReportDir = testReportDir;
+    public TestClassProcessorFactoryImpl(ScalatestSpec spec) {
       this.spec = spec;
     }
 
     @Override
     public TestClassProcessor create(ServiceRegistry serviceRegistry) {
-      return new ScalatestTestClassProcessor(spec, testReportDir);
+      try {
+        IdGenerator idGenerator = serviceRegistry.get(IdGenerator.class);
+        Clock clock = serviceRegistry.get(Clock.class);
+        ActorFactory actorFactory = serviceRegistry.get(ActorFactory.class);
+        return new ScalatestTestClassProcessor(spec, idGenerator, actorFactory, clock);
+      } catch (Exception e) {
+        throw UncheckedException.throwAsUncheckedException(e);
+      }
     }
   }
 }

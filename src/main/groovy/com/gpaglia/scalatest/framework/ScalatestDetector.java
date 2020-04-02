@@ -1,8 +1,7 @@
 package com.gpaglia.scalatest.framework;
 
-import com.gpaglia.scalatest.framework.api.Detector;
 import com.gpaglia.scalatest.framework.api.Fingerprint;
-import com.gpaglia.scalatest.framework.api.Framework;
+import com.gpaglia.scalatest.framework.api.SuiteSelector;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.internal.file.RelativeFile;
 import org.gradle.api.internal.tasks.testing.TestClassProcessor;
@@ -19,10 +18,10 @@ public class ScalatestDetector implements TestFrameworkDetector {
   private TestClassProcessor testClassProcessor;
   private Set<File> testClasspath;
   private Set<File> testClassesDirectories;
-  private final Detector detector;
+  private final SuiteSelector selector;
 
-  public ScalatestDetector(final Detector detector) {
-    this.detector = detector;
+  public ScalatestDetector(final SuiteSelector selector) {
+    this.selector = selector;
   }
 
   @Override
@@ -34,7 +33,7 @@ public class ScalatestDetector implements TestFrameworkDetector {
   public boolean processTestClass(RelativeFile testClassFile) {
     final String relativeClassFile = testClassFile.getRelativePath().getPathString();
     LOGGER.debug("Testing class file {}, relative path {}", testClassFile, relativeClassFile);
-    final Set<Pair<Class<?>, Fingerprint>> result = detector.processSuite(relativeClassFile);
+    final Set<Pair<Class<?>, Fingerprint>> result = selector.processSuite(relativeClassFile);
     if (! result.isEmpty()) {
       for (Pair<Class<?>, Fingerprint> pair: result) {
         publishTestClass(pair.getLeft(), pair.getRight());

@@ -1,14 +1,12 @@
 package org.gradle.api.tasks.testing;
 
 import com.gpaglia.scalatest.framework.ScalatestOptions;
-import com.gpaglia.scalatest.framework.ScalatestTestFramework;
 import org.gradle.api.Action;
-import org.gradle.api.internal.tasks.testing.filter.DefaultTestFilter;
 import org.gradle.internal.Actions;
 
-public abstract class AbstractScalatestTask extends Test {
+public abstract class AbstractScalatestTask__OLD extends Test {
 
-  public AbstractScalatestTask() {
+  public AbstractScalatestTask__OLD() {
     super();
   }
 
@@ -17,6 +15,7 @@ public abstract class AbstractScalatestTask extends Test {
   }
 
   public void useScalatest(Action<? super ScalatestOptions> testFrameworkConfigure) {
+    /*
     useTestFramework(
         new ScalatestTestFramework(this, (DefaultTestFilter) getFilter(), getInstantiator(), getClassLoaderCache())
     );
@@ -26,6 +25,8 @@ public abstract class AbstractScalatestTask extends Test {
     } else {
       throw new IllegalStateException("Unexpected option type for ScalatestTask: " + opts.getClass());
     }
+
+    */
   }
 
 }

@@ -4,7 +4,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.scala.ScalaPlugin
-import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
@@ -59,10 +58,10 @@ class ScalaTestPlugin implements Plugin<Project> {
             */
             configure(
                     t.tasks.create(
-                            name: 'scalatestproto', type: ScalatestTask, group: 'verification',
+                            name: 'scalatest', type: Scalatest, group: 'verification',
                             description: 'Run scalatest unit tests [new]',
                             dependsOn: t.tasks.testClasses
-                    ).asType(Test.class)
+                    ).asType(Scalatest.class)
             )
         }
     }
@@ -75,7 +74,7 @@ class ScalaTestPlugin implements Plugin<Project> {
         }
     }
 
-    static void configure(Test test) {
+    static void configure(Scalatest test) {
         test.maxParallelForks = Runtime.runtime.availableProcessors()
         test.testLogging.exceptionFormat = TestExceptionFormat.SHORT
         /*

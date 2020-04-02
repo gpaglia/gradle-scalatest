@@ -68,6 +68,18 @@ dependencies {
     testImplementation "org.mockito:mockito-core:${plugin__mockitoVersion}"
     testImplementation "org.mockito:mockito-junit-jupiter:${plugin__mockitoVersion}"
 
+    // test fixtures from framework
+    testImplementation testFixtures("com.gpaglia.scalatest.framework:scalatest-framework:${plugin__scalatestFrameworkVersion}") {
+        // slf4j compatible log backend provided by gradle
+        exclude group: "ch.qos.logback", module: "logback-classic"
+    }
+
+    // test samples from framework
+    testRuntimeOnly ("com.gpaglia.scalatest.framework:scalatest-framework:${plugin__scalatestFrameworkVersion}:samples") {
+        // slf4j compatible log backend provided by gradle
+        exclude group: "ch.qos.logback", module: "logback-classic"
+    }
+
     testCommonImplementation localGroovy()
 }
 

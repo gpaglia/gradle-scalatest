@@ -1,6 +1,6 @@
 package com.gpaglia.scalatest.framework;
 
-import com.gpaglia.scalatest.ScalatestTask;
+import org.gradle.api.tasks.testing.AbstractScalatest;
 import org.gradle.api.internal.initialization.ClassLoaderIds;
 import org.gradle.api.internal.initialization.loadercache.ClassLoaderCache;
 import org.gradle.internal.Factory;
@@ -8,10 +8,10 @@ import org.gradle.internal.classpath.DefaultClassPath;
 
 public class ScalatestClassLoaderFactory implements Factory<ClassLoader> {
   private final ClassLoaderCache classLoaderCache;
-  private final ScalatestTask testTask;
+  private final AbstractScalatest testTask;
   private ClassLoader testClassLoader;
 
-  public ScalatestClassLoaderFactory(ClassLoaderCache classLoaderCache, ScalatestTask testTask) {
+  public ScalatestClassLoaderFactory(ClassLoaderCache classLoaderCache, AbstractScalatest testTask) {
     this.classLoaderCache = classLoaderCache;
     this.testTask = testTask;
   }

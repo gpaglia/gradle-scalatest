@@ -1,13 +1,14 @@
 package com.gpaglia.scalatest.framework;
 
 
+import com.gpaglia.scalatest.framework.matcher.ScalatestDefaultMatcher;
 import org.gradle.api.internal.tasks.testing.filter.DefaultTestFilter;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 public class ScalatestSpec implements Serializable {
   private static final long serialVersionUID = 1;
@@ -20,10 +21,8 @@ public class ScalatestSpec implements Serializable {
   private final Set<String> includeTags;
   private final Set<String> excludeTags;
 
-  private final Set<BiPredicate<String, String>> testIncludePredicates; // class, test
-  private final Set<BiPredicate<String, String>> testExcludePredicates; // class, test
-  private final Set<Predicate<String>> classIncludePredicates;
-  private final Set<Predicate<String>> classExcludePredicates;
+  private final ScalatestMatcher includeMatcher;
+  private final ScalatestMatcher excludeMatcher;
 
 
   public ScalatestSpec(DefaultTestFilter filter, ScalatestOptions options) {
@@ -32,10 +31,8 @@ public class ScalatestSpec implements Serializable {
     this.commandLineIncludePatterns = filter.getCommandLineIncludePatterns();
     this.includeTags = options.getIncludeTags();
     this.excludeTags = options.getExcludeTags();
-    this.testIncludePredicates = generateTestIncludePredicates(this.includePatterns, this.commandLineIncludePatterns);
-    this.testExcludePredicates = generateTestExcludePredicates(this.excludePatterns);
-    this.classIncludePredicates = generateClassIncludePredicates(this.includePatterns, this.commandLineIncludePatterns);
-    this.classExcludePredicates = generateClassExcludePredicates(this.excludePatterns);
+    this.includeMatcher = generateIncludeMatcher(this.includePatterns, this.commandLineIncludePatterns);
+    this.excludeMatcher = generateExcludeMatcher(this.excludePatterns);
   }
 
   public Set<String> getIncludePatterns() {
@@ -54,29 +51,39 @@ public class ScalatestSpec implements Serializable {
     return new HashSet<>(includeTags);
   }
 
-  public Set<String>
-  getExcludeTags() {
+  public Set<String> getExcludeTags() {
     return new HashSet<String>(excludeTags);
   }
 
-  private Set<BiPredicate<String, String>> generateTestIncludePredicates(Set<String> incPatterns, Set<String> incCmdPatterns) {
-    // TODO: complete
-    return null;
+  public boolean test(Class<?> clazz) {
+    return includeMatcher.test(clazz) && ! excludeMatcher.test(clazz);
   }
 
-  private Set<BiPredicate<String, String>> generateTestExcludePredicates(Set<String> excPatterns) {
-    // TODO: complete
-    return null;
+  public boolean test(Class<?> clazz, String testName) {
+    return includeMatcher.test(clazz, testName) && ! excludeMatcher.test(clazz, testName);
   }
 
-  private Set<Predicate<String>> generateClassIncludePredicates(Set<String> incPatterns, Set<String> incCmdPatterns) {
-    // TODO: complete
-    return null;
+  // private helper methods
+
+  private ScalatestMatcher generateIncludeMatcher(Set<String> incPatterns, Set<String> incCmdPatterns) {
+    final List<ScalatestMatcher> matchers = new ArrayList<>();
+    for (String incPattern : incPatterns) {
+      matchers.add(new ScalatestDefaultMatcher(incPattern));
+    }
+    for (String incCmdPattern : incCmdPatterns) {
+      matchers.add(new ScalatestDefaultMatcher(incCmdPattern));
+    }
+    return ScalatestMatcher.or(matchers);
   }
 
-  private Set<Predicate<String>> generateClassExcludePredicates(Set<String> excPatterns) {
-    // TODO: complete
-    return null;
+  private ScalatestMatcher generateExcludeMatcher(Set<String> excPatterns) {
+    final List<ScalatestMatcher> matchers = new ArrayList<>();
+    for (String excPattern : excPatterns) {
+      matchers.add(new ScalatestDefaultMatcher(excPattern));
+    }
+    return ScalatestMatcher.or(matchers);
   }
+
+
 
 }

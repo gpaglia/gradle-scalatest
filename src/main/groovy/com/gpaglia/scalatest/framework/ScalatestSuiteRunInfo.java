@@ -2,7 +2,6 @@ package com.gpaglia.scalatest.framework;
 
 import com.gpaglia.scalatest.framework.api.Fingerprint;
 import org.gradle.api.internal.tasks.testing.TestClassRunInfo;
-import org.gradle.internal.impldep.org.junit.runners.Suite;
 
 public class ScalatestSuiteRunInfo implements TestClassRunInfo {
 
@@ -19,7 +18,15 @@ public class ScalatestSuiteRunInfo implements TestClassRunInfo {
     return clazz.getName();
   }
 
-  public Class<?> getTEstClass() { return clazz; }
+  public Class<?> getTestClass() { return clazz; }
 
   public Fingerprint getFIngerprint() { return fingerprint; }
+
+  @Override
+  public String toString() {
+    return "ScalatestSuiteRunInfo{" +
+        "clazz=" + clazz +
+        ", fingerprint=" + fingerprint +
+        '}';
+  }
 }

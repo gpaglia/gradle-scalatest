@@ -6,7 +6,7 @@ ext {
     plugin__testSetsPluginVersion = '2.2.1'
 
     // scalatest-framework
-    plugin__scalatestFrameworkVersion = '0.1.0+build.6.sha.0571eef-SNAPSHOT'
+    plugin__scalatestFrameworkVersion = '0.2.1'
 
     // junit5
     plugin__junitVersion = '5.6.0'

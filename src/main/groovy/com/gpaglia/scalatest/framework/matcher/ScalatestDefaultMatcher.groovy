@@ -1,5 +1,7 @@
-package com.gpaglia.scalatest.framework
+package com.gpaglia.scalatest.framework.matcher
 
+import com.gpaglia.scalatest.framework.ScalatestMatcher
+import com.gpaglia.scalatest.framework.ScalatestMatcherException
 import groovy.transform.PackageScope
 import groovy.transform.ToString
 import org.apache.commons.lang3.tuple.ImmutablePair
@@ -52,7 +54,7 @@ import java.util.regex.Pattern
  *
  */
 @ToString
-class ScalatestMatcher {
+class ScalatestDefaultMatcher implements ScalatestMatcher {
 
     // TODO: make wildcard translation more specific than ^[.]*, adding character ranges for cls, pkg and mth
 
@@ -97,7 +99,7 @@ class ScalatestMatcher {
         }
     }
 
-    ScalatestMatcher(String selector) {
+    ScalatestDefaultMatcher(String selector) {
         if (selector == null || selector.isEmpty()) {
             throw new IllegalArgumentException("Selector cannot be empty")
         }
@@ -177,8 +179,6 @@ class ScalatestMatcher {
             }
         }
     }
-
-
 
     @PackageScope
     static Pair<SuiteNameMatcher, Pattern> parsePkgAndClsAndMth(String suiteSpec) throws ScalatestMatcherException {
@@ -289,18 +289,16 @@ class ScalatestMatcher {
         return Pattern.compile(sb.toString())
     }
 
-    // behaviour
+    // ScalatestMatcher interface
 
-    boolean match(Class<?> clazz) {
-        return false
+    @Override
+    boolean test(Class<?> clazz) {
+        return (matchesClassName(clazz.getName()) && matchesPackageName(clazz.getPackageName()));
     }
 
-    boolean match(Class<?> clazz, String testName) {
-        return false
-    }
-
-    boolean match(Class<?> clazz, List<String> nestedSuiteNames, String testName) {
-        return false
+    @Override
+    boolean test(Class<?> clazz, String testName) {
+        return test(clazz) && matchesTestName(testName);
     }
 
     // getters and std methods
@@ -320,132 +318,27 @@ class ScalatestMatcher {
         return suiteMatcher == null ? null : suiteMatcher.getClsPattern()
     }
 
+    boolean matchesClassName(String name) {
+        final Pattern clsPattern = getClsPattern()
+        return clsPattern == null || name.matches(clsPattern)
+    }
+
     Pattern getPkgPattern() {
         return suiteMatcher == null ? null : suiteMatcher.getPkgPattern()
+    }
+
+    boolean matchesPackageName(String name) {
+        final Pattern pkgPattern = getPkgPattern()
+        return pkgPattern == null || name.matches(pkgPattern)
     }
 
     Pattern getTestPattern() {
         return testPattern
     }
 
-    /*
-    @PackageScope
-    void decodeTuple(Tuple3<List<String>, String, List<String>> tuple) {
-        final List<String> packages = tuple.first
-        final String clazz = tuple.second
-        final List<String> methods = tuple.third
-
-        if (! packages.empty) {
-            if (! packages.last().contentEquals(WILDCARD)) {
-                if (! classes.empty && ! containsWildcards(classes)) {
-                    // fully qualified class name
-                    suites.add(packages.join(".") + "." + classes.join("."))
-                } else {
-                    packagesMember.add(packages.join("."))
-                    if (! classes.empty) {
-                        // here we have just 1 class with wildcard; check for safety
-                        if (classes.size() > 1 || ! classes.first().matches(CLASS_SUFFIX_PAT)) {
-                            throw new IllegalStateException("Unexpected classes with wildcard: " + classes.toString())
-                        }
-                        if (! classes.first().contentEquals(WILDCARD)) {
-                            suffixes.add(classes.first().substring(1))
-                        }
-                    }
-                }
-
-            } else {
-                packagesWildcard.add(packages.subList(0, packages.size() - 1).join("."))
-                if (! classes.empty) {
-                    // manage as suffix only the main class, ignoring the nested classes
-                    if (classes.size() > 1) {
-                        Logging.getLogger(this.getClass()).warn("The nested classes will be ignored: {}", classes.subList(1, classes.size()))
-                    }
-                    if (! classes.first().contentEquals(WILDCARD)) {
-                        suffixes.add(classes.first().replace(WILDCARD, ""))
-                    }
-                }
-            }
-        } else {
-            if (! classes.empty) {
-                // manage as suffix only the main class, ignoring the nested classes
-                if (classes.size() > 1) {
-                    Logging.getLogger(this.getClass()).warn("The nested classes will be ignored: {}", classes.subList(1, classes.size()))
-                }
-                if (! classes.first().contentEquals(WILDCARD)) {
-                    suffixes.add(classes.first().replace(WILDCARD, ""))
-                }
-            }
-        }
-
-        if (! methods.empty) {
-            final mthd = methods.join(".")
-            if (! mthd.contains(WILDCARD)) {
-                testsFull.add(mthd)
-            } else {
-                final String[] items = mthd.split(Pattern.quote(WILDCARD))
-                for (int i = 0; i < items.length; i++) {
-                    if (! items[i].isEmpty()) {
-                        testsSubstring.add(items[i])
-                        break
-                    }
-                }
-            }
-        }
+    boolean matchesTestName(String name) {
+        final Pattern testPattern = getTestPattern()
+        return testPattern == null || name.matches(testPattern)
     }
-
-    @PackageScope
-    static Tuple3<List<String>, List<String>, List<String>> parsePattern(String pattern) {
-        final int IN_PKG = 0
-        final int IN_CLASS = 1
-        final int IN_METHOD = 2
-
-        final String[] splits = pattern.split("[.]")
-        final List<String> packages = new ArrayList<>()
-        final List<String> classes = new ArrayList<>()
-        final List<String> methods = new ArrayList<>()
-
-        int state = splits.length < 2 ? IN_CLASS : IN_PKG
-
-        splits.each {
-            if (it.size() == 0) {
-                throw new IllegalArgumentException("Invalid pattern: consecutive '.' characters not allowed in " + pattern)
-            } else if (state == IN_PKG && it.matches(CLASS_SUFFIX_PAT)) {
-                state = IN_METHOD
-                classes.add(it)
-            } else if (state <= IN_CLASS && (WILDCARD.equals(it) || it.matches(CLASS_NAME_PAT))) {
-                state = IN_CLASS
-                classes.add(it)
-            } else if (state == IN_PKG && it.matches(PKG_SEGMENT_PAT)) {
-                packages.add(it)
-            } else if (state == IN_PKG && it.matches(PKG_LAST_SEGMENT_PAT)) {
-                state = IN_CLASS
-                packages.add(it.substring(0, it.length() - 1))
-                packages.add(WILDCARD)
-            } else if (state >= IN_CLASS && it.matches(METHOD_NAME_PAT)) {
-                state = IN_METHOD
-                methods.add(it)
-            } else {
-                throw new IllegalArgumentException("Invalid pattern: unmanageable segment " + it +  " in state " + state)
-            }
-        }
-
-        new Tuple3<List<String>, List<String>, List<String>>(packages, classes, methods)
-    }
-
-    @Override
-    String toString() {
-        return "ScalaTestHelper{" +
-                "configs=" + configs +
-                ", suffixes=" + suffixes +
-                ", suites=" + suites +
-                ", testsFull=" + testsFull +
-                ", testSubstrings=" + testsSubstring +
-                ", packagesMember=" + packagesMember +
-                ", packagesWildcard=" + packagesWildcard +
-                ", includeTags=" + includeTags +
-                ", excludeTags=" + excludeTags +
-                '}'
-    }
-    */
 
 }
