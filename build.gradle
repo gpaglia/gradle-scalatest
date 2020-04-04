@@ -41,6 +41,19 @@ testSets {
     }
 }
 
+// mixed java - groovy compilations, let's have them handled by groovyCompile
+sourceSets {
+    main {
+        java {
+            srcDirs = []
+        }
+        groovy {
+            srcDirs = ["src/main/java", "src/main/groovy"]
+        }
+    }
+}
+
+
 // Make all tests use JUnit 5
 tasks.withType(Test) {
     useJUnitPlatform()
@@ -68,19 +81,26 @@ dependencies {
     testImplementation "org.mockito:mockito-core:${plugin__mockitoVersion}"
     testImplementation "org.mockito:mockito-junit-jupiter:${plugin__mockitoVersion}"
 
+    // test common
+
     // test fixtures from framework
-    testImplementation testFixtures("com.gpaglia.scalatest.framework:scalatest-framework:${plugin__scalatestFrameworkVersion}") {
+    testCommonApi testFixtures("com.gpaglia.scalatest.framework:scalatest-framework:${plugin__scalatestFrameworkVersion}") {
+        // slf4j compatible log backend provided by gradle
+        exclude group: "ch.qos.logback", module: "logback-classic"
+    }
+    testCommonImplementation testFixtures("com.gpaglia.scalatest.framework:scalatest-framework:${plugin__scalatestFrameworkVersion}") {
         // slf4j compatible log backend provided by gradle
         exclude group: "ch.qos.logback", module: "logback-classic"
     }
 
     // test samples from framework
-    testRuntimeOnly ("com.gpaglia.scalatest.framework:scalatest-framework:${plugin__scalatestFrameworkVersion}:samples") {
+    testCommonRuntimeOnly ("com.gpaglia.scalatest.framework:scalatest-framework:${plugin__scalatestFrameworkVersion}:samples") {
         // slf4j compatible log backend provided by gradle
         exclude group: "ch.qos.logback", module: "logback-classic"
     }
 
     testCommonImplementation localGroovy()
+    testCommonImplementation gradleApi()
 }
 
 task groovydocJar(type: Jar, dependsOn: groovydoc) {

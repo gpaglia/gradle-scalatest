@@ -3,7 +3,7 @@ ext {
     // plugins
     plugin__wusaSemverPluginVersion = '2.0.0-alpha.1'
     plugin__lombokPluginVersion = '4.1.6'
-    plugin__testSetsPluginVersion = '2.2.1'
+    plugin__testSetsPluginVersion = '3.0.0'
 
     // scalatest-framework
     plugin__scalatestFrameworkVersion = '0.2.1'
