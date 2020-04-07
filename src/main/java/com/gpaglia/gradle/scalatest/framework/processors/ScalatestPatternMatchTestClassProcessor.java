@@ -12,7 +12,7 @@ public class ScalatestPatternMatchTestClassProcessor implements TestClassProcess
   private final TestClassProcessor delegate;
 
   public ScalatestPatternMatchTestClassProcessor(DefaultTestFilter testFilter, TestClassProcessor delegate) {
-    this.matcher = ScalatestMatcher.toMatcher(testFilter);
+    this.matcher = ScalatestMatcher.fromFilter(testFilter);
     this.delegate = delegate;
   }
 

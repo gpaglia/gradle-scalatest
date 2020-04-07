@@ -1,6 +1,7 @@
 package com.gpaglia.gradle.scalatest.framework;
 
 import com.gpaglia.scalatest.framework.api.Framework;
+import com.gpaglia.scalatest.framework.api.FrameworkBuilder;
 import com.gpaglia.scalatest.framework.impl.FrameworkFactoryImpl;
 import org.gradle.api.Action;
 import org.gradle.api.internal.initialization.loadercache.ClassLoaderCache;
@@ -40,7 +41,10 @@ public class ScalatestTestFramework implements TestFramework {
     this.filter = filter;
     options = instantiator.newInstance(ScalatestOptions.class, testTask.getProject().getProjectDir());
     classLoaderFactory = new ScalatestClassLoaderFactory(classLoaderCache, testTask);
-    framework = new FrameworkFactoryImpl().newFramework(classLoaderFactory.create());
+    framework = FrameworkBuilder
+      .builder()
+      .withClassLoader(classLoaderFactory.create())
+      .build();
     detector = new ScalatestDetector(framework.newSelector());
   }
   @Override

@@ -56,7 +56,7 @@ import java.util.regex.Pattern
 @ToString
 class ScalatestDefaultMatcher implements com.gpaglia.gradle.scalatest.framework.ScalatestMatcher {
 
-    // TODO: make wildcard translation more specific than ^[.]*, adding character ranges for cls, pkg and mth
+    // TODO: make wildcard translation more specific than [^.]*, adding character ranges for cls, pkg and mth
 
     // patterns for inclusion
     @PackageScope static final char WILDCARD_CHAR = '*'
@@ -78,6 +78,13 @@ class ScalatestDefaultMatcher implements com.gpaglia.gradle.scalatest.framework.
     private final List<SuiteNameMatcher> nestedSuiteMatchers = new ArrayList<>()
     private SuiteNameMatcher suiteMatcher = null;
     private Pattern testPattern = null
+
+    @Override
+    public String toString() {
+        return "ScalatestDefaultMatcher{" +
+                "selector='" + selector + '\'' +
+                '}';
+    }
 
     private static class SuiteNameMatcher {
         private final Pattern pkgPattern
@@ -293,7 +300,7 @@ class ScalatestDefaultMatcher implements com.gpaglia.gradle.scalatest.framework.
 
     @Override
     boolean test(Class<?> clazz) {
-        return (matchesClassName(clazz.getName()) && matchesPackageName(clazz.getPackageName()));
+        return (matchesClassName(clazz.getSimpleName()) && matchesPackageName(clazz.getPackageName()));
     }
 
     @Override
@@ -340,5 +347,7 @@ class ScalatestDefaultMatcher implements com.gpaglia.gradle.scalatest.framework.
         final Pattern testPattern = getTestPattern()
         return testPattern == null || name.matches(testPattern)
     }
+
+
 
 }

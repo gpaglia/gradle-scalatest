@@ -1,5 +1,6 @@
 package com.gpaglia.gradle.scalatest.framework;
 
+import com.gpaglia.gradle.scalatest.framework.matcher.BinaryOp;
 import com.gpaglia.gradle.scalatest.framework.matcher.BooleanBinaryOperator;
 import com.gpaglia.gradle.scalatest.framework.matcher.ScalatestDefaultMatcher;
 import org.gradle.api.internal.tasks.testing.filter.DefaultTestFilter;
@@ -9,11 +10,11 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static com.gpaglia.gradle.scalatest.framework.matcher.BinaryOp.AND;
+import static com.gpaglia.gradle.scalatest.framework.matcher.BinaryOp.OR;
 import static java.util.stream.Collectors.toSet;
 
 public interface ScalatestMatcher {
-  BooleanBinaryOperator AND = (b1, b2) -> b1 && b2;
-  BooleanBinaryOperator OR = (b1, b2) -> b1 || b2;
   ScalatestMatcher MATCH_ALL = new ScalatestMatcher() {
     @Override
     public boolean test(Class<?> clazz) { return true; }
@@ -38,11 +39,11 @@ public interface ScalatestMatcher {
     return this::test;
   }
 
-  static ScalatestMatcher combine(BooleanBinaryOperator op, final boolean matchIfEmpty, final ScalatestMatcher... matchers) {
+  static ScalatestMatcher combine(BinaryOp op, final boolean matchIfEmpty, final ScalatestMatcher... matchers) {
     return combine(op, matchIfEmpty, Arrays.asList(matchers));
   }
 
-  static ScalatestMatcher combine(BooleanBinaryOperator op, final boolean matchIfEmpty, final Collection<ScalatestMatcher> matchers) {
+  static ScalatestMatcher combine(BinaryOp op, final boolean matchIfEmpty, final Collection<ScalatestMatcher> matchers) {
 
     return new ScalatestMatcher() {
 
@@ -73,6 +74,9 @@ public interface ScalatestMatcher {
           return result;
         }
       }
+
+      @Override
+      public String toString() { return op.toString() + "--" + ourMatchers.toString(); }
     };
 
   }
@@ -105,10 +109,13 @@ public interface ScalatestMatcher {
       public boolean test(Class<?> clazz, String testName) {
         return ! matcher.test(clazz, testName);
       }
+
+      @Override
+      public String toString() { return "NOT--" + matcher.toString(); }
     };
   }
 
-  static ScalatestMatcher toMatcher(DefaultTestFilter filter) {
+  static ScalatestMatcher fromFilter(DefaultTestFilter filter) {
     final Set<ScalatestMatcher> inclMatchers = Stream.concat(
         filter
           .getIncludePatterns()
