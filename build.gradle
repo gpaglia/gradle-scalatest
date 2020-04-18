@@ -88,11 +88,12 @@ dependencies {
         // slf4j compatible log backend provided by gradle
         exclude group: "ch.qos.logback", module: "logback-classic"
     }
+    /*
     testCommonImplementation testFixtures("com.gpaglia.scalatest.framework:scalatest-framework:${plugin__scalatestFrameworkVersion}") {
         // slf4j compatible log backend provided by gradle
         exclude group: "ch.qos.logback", module: "logback-classic"
     }
-
+    */
     // test samples from framework
     testCommonRuntimeOnly ("com.gpaglia.scalatest.framework:scalatest-framework:${plugin__scalatestFrameworkVersion}:samples") {
         // slf4j compatible log backend provided by gradle

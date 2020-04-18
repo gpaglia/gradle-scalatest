@@ -27,7 +27,7 @@ public class ScalatestTestClassScanner implements Runnable {
   @Override
   public void run() {
     if (testFrameworkDetector == null) {
-      filenameScan();
+      throw new IllegalStateException("Unexpected null detector [filename scan not supported with scalatest]");
     } else {
       detectionScan();
     }
@@ -43,6 +43,7 @@ public class ScalatestTestClassScanner implements Runnable {
     });
   }
 
+  /*
   private void filenameScan() {
     candidateClassFiles.visit(new ClassFileVisitor() {
       @Override
@@ -51,9 +52,8 @@ public class ScalatestTestClassScanner implements Runnable {
         testClassProcessor.processTestClass(testClass);
       }
     });
-
-
   }
+  */
 
   private abstract static class ClassFileVisitor extends EmptyFileVisitor {
     @Override
